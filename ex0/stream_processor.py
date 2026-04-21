@@ -11,7 +11,7 @@
 #                                                                            #
 # ************************************************************************** #
 
-from typing import Any, List, Dict
+from typing import Any, List, Union, Dict
 from abc import ABC, abstractmethod
 
 
@@ -32,16 +32,21 @@ class DataProcessor(ABC):
 class NumericProcessor(DataProcessor):
 
     def process(self, data:  Any) -> str:
-        data: List = list(data)
+        data: List[Any] = list(data)
         somme: int = 0
         for x in data:
-            somme += x
+            somme += float(x)
         average: float = somme / len(data) if data else 0
         return (f"{len(data)} numeric values, sum={somme}, avg={average:.1f}")
 
     def validate(self, data:  Any) -> bool:
-        return isinstance(data, list) and \
-            all(isinstance(x, (int, float)) for x in data)
+        try:
+            for x in list(data):
+                if type(x) not in Union[int, float]:
+                    return 0
+            return 1
+        except (ValueError, TypeError):
+            return 0
 
     def format_output(self, result:  str) -> str:
         return f"Processed {result}"
@@ -55,7 +60,9 @@ class TextProcessor(DataProcessor):
         return (f"{len(data)} characters, {word} words")
 
     def validate(self, data:  Any) -> bool:
-        return isinstance(data, str)
+        if type(data) == str:
+            return 1
+        return 0
 
     def format_output(self, result:  str) -> str:
         return f"Processing text: {result}"
@@ -64,20 +71,22 @@ class TextProcessor(DataProcessor):
 class LogProcessor(DataProcessor):
 
     def process(self, data:  Any) -> str:
-        lbl: Dict = {
+        lbl: Dict[str, str] = {
             "ERROR": "[ALERT]",
             "INFO": "[INFO]",
             "ALERT": "[ALERT]",
             "DEBUG": "[DEBUG]"
             }
-        lst: list = str(data).split(": ")
+        lst: List[Any] = str(data).split(": ")
         lvl: str = lst[0]
         msg: str = lst[1].strip()
         return (f"{lbl[lvl]} {lvl} level detected: {msg}")
 
     def validate(self, data:  Any) -> bool:
-        return isinstance(data, str) and \
-            any(lvl in data for lvl in ['INFO', 'ERROR', 'DEBUG', 'ALERT'])
+        lvl_lst: List[str] = ['INFO', 'ERROR', 'DEBUG', 'ALERT']
+        if type(data) == str and any(lvl in data for lvl in lvl_lst):
+            return 1
+        return 0
 
     def format_output(self, result:  str) -> str:
         return f"{result}"
