@@ -2,7 +2,7 @@
 # ************************************************************************** #
 #                                                                            #
 #                                                       :::      ::::::::    #
-#    stream_processor.py                               :+:      :+:    :+:   #
+#    data_processor.py                                 :+:      :+:    :+:   #
 #                                                   +:+ +:+         +:+      #
 #    By: mamiandr <mamiandr@student.42antananari  +#+  +:+       +#+         #
 #                                               +#+#+#+#+#+   +#+            #
@@ -17,27 +17,37 @@ from abc import ABC, abstractmethod
 
 class DataProcessor(ABC):
 
+    def __init__(self):
+        self._data
+
     @abstractmethod
-    def process(self, data:  Any) -> str:
+    def ingest(self, data:  Any) -> None:
         pass
 
     @abstractmethod
     def validate(self, data:  Any) -> bool:
         pass
 
-    def format_output(self, result:  str) -> str:
-        return f"{result}"
+    def output(self) -> tuple[int, str]:
+        return
 
 
 class NumericProcessor(DataProcessor):
 
-    def process(self, data:  Any) -> str:
-        data: List[Any] = list(data)
-        somme: int = 0
-        for x in data:
-            somme += float(x)
-        average: float = somme / len(data) if data else 0
-        return (f"{len(data)} numeric values, sum={somme}, avg={average:.1f}")
+    def ingest(self, data:  Any) -> None:
+        try:
+            if not self.validate(data):
+                raise ValueError("Got exception: Improper numeric data")
+            data: List[Any] = list(data)
+            somme: int = 0
+            for x in data:
+                somme += float(x)
+            average: float = somme / len(data) if data else 0
+            return (f"{len(data)} numeric values,\
+                    sum={somme},\
+                    avg={average:.1f}")
+        except ValueError as e:
+            print(e)
 
     def validate(self, data:  Any) -> bool:
         try:
@@ -48,39 +58,43 @@ class NumericProcessor(DataProcessor):
         except (ValueError, TypeError):
             return 0
 
-    def format_output(self, result:  str) -> str:
-        return f"Processed {result}"
-
 
 class TextProcessor(DataProcessor):
 
-    def process(self, data:  Any) -> str:
-        data: str = str(data)
-        word: int = len(data.split())
-        return (f"{len(data)} characters, {word} words")
+    def ingest(self, data:  Any) -> None:
+        try:
+            if not self.validate(data):
+                raise ValueError("")
+            data: str = str(data)
+            word: int = len(data.split())
+            return (f"{len(data)} characters, {word} words")
+        except ValueError:
+            pass
 
     def validate(self, data:  Any) -> bool:
         if type(data) == str:
             return 1
         return 0
 
-    def format_output(self, result:  str) -> str:
-        return f"Processing text: {result}"
-
 
 class LogProcessor(DataProcessor):
 
-    def process(self, data:  Any) -> str:
-        lbl: Dict[str, str] = {
-            "ERROR": "[ALERT]",
-            "INFO": "[INFO]",
-            "ALERT": "[ALERT]",
-            "DEBUG": "[DEBUG]"
-            }
-        lst: List[Any] = str(data).split(": ")
-        lvl: str = lst[0]
-        msg: str = lst[1].strip()
-        return (f"{lbl[lvl]} {lvl} level detected: {msg}")
+    def ingest(self, data:  Any) -> None:
+        try:
+            if not self.validate(data):
+                raise ValueError
+            lbl: Dict[str, str] = {
+                "ERROR": "[ALERT]",
+                "INFO": "[INFO]",
+                "ALERT": "[ALERT]",
+                "DEBUG": "[DEBUG]"
+                }
+            lst: List[Any] = str(data).split(": ")
+            lvl: str = lst[0]
+            msg: str = lst[1].strip()
+            return (f"{lbl[lvl]} {lvl} level detected: {msg}")
+        except ValueError:
+            pass
 
     def validate(self, data:  Any) -> bool:
         lvl_lst: List[str] = ['INFO', 'ERROR', 'DEBUG', 'ALERT']
@@ -88,14 +102,11 @@ class LogProcessor(DataProcessor):
             return 1
         return 0
 
-    def format_output(self, result:  str) -> str:
-        return f"{result}"
-
 
 def main():
 
     def example() -> None:
-        print("=== CODE NEXUS - DATA PROCESSOR FOUNDATION ===")
+        print("=== Code Nexus - Data Processor ===")
         list_data: list = [
             (NumericProcessor(), "Numeric", [1, 2, 3, 4, 5], "data"),
             (TextProcessor(), "Text", "Hello Nexus World", "data"),
@@ -105,9 +116,9 @@ def main():
             print(f"\nInitializing {label} Processor...")
             if objects.validate(data) is True:
                 print(f"Processing data: {data}")
-                result = objects.process(data)
+                result = objects.ingest(data)
                 print(f"Validation: {label} {form} verified")
-                print(f"Output: {objects.format_output(result)}")
+                print(f"Output: {objects.output(result)}")
             else:
                 print(f"Erreur de validation de {data}")
 
@@ -115,10 +126,10 @@ def main():
 
     def code_nexus() -> None:
         print("Processing multiple data types through same interface...")
-        print(f"Result 1: Processed {NumericProcessor().process([2, 2, 2])}")
+        print(f"Result 1: Processed {NumericProcessor().ingest([2, 2, 2])}")
         print(f"Result 2: Processed text: \
-{TextProcessor().process('Hello worlds')}")
-        print(f"Result 3: {LogProcessor().process('INFO: System ready')}")
+{TextProcessor().ingest('Hello worlds')}")
+        print(f"Result 3: {LogProcessor().ingest('INFO: System ready')}")
         print("\nFoundation systems online. Nexus ready for advanced streams")
 
     example()
