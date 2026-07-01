@@ -17,8 +17,7 @@ from abc import ABC, abstractmethod
 
 class DataProcessor(ABC):
 
-    def __init__(self):
-        self._data
+    _data: tuple[int, str]
 
     @abstractmethod
     def ingest(self, data:  Any) -> None:
@@ -29,7 +28,7 @@ class DataProcessor(ABC):
         pass
 
     def output(self) -> tuple[int, str]:
-        return
+        return self._data
 
 
 class NumericProcessor(DataProcessor):
